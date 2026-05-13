@@ -869,43 +869,92 @@
     }
   }
 
-  function showToast(msg, type = 'info') {
-    let toast = document.getElementById('toast');
-    if(!toast) {
-      if(!document.body) {
-        console.warn('showToast: document.body introuvable', msg);
-        return;
+  // Initialiser le toast au chargement de la page
+  function ensureToastExists() {
+    try {
+      if(!document.getElementById('toast') && document.body) {
+        const toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          z-index: 10000;
+          transform: translateY(-100px);
+          opacity: 0;
+          transition: all 0.3s ease;
+          max-width: 300px;
+          word-wrap: break-word;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        document.body.appendChild(toast);
+        console.log('✅ Élément #toast créé dynamiquement au chargement');
       }
-      console.warn('showToast: élément #toast introuvable, création dynamique', msg);
-      toast = document.createElement('div');
-      toast.id = 'toast';
-      toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        z-index: 10000;
-        transform: translateY(-100px);
-        opacity: 0;
-        transition: all 0.3s ease;
-        max-width: 300px;
-        word-wrap: break-word;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      `;
-      document.body.appendChild(toast);
+    } catch(e) {
+      console.warn('ensureToastExists: erreur', e);
     }
-    if(!toast) {
-      console.warn('showToast: impossible de créer l\'élément toast', msg);
-      return;
+  }
+
+  function showToast(msg, type = 'info') {
+    try {
+      let toast = document.getElementById('toast');
+      
+      // Créer le toast s'il n'existe pas
+      if(!toast) {
+        console.warn('showToast: création du toast', msg);
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 12px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          z-index: 10000;
+          transform: translateY(-100px);
+          opacity: 0;
+          transition: all 0.3s ease;
+          max-width: 300px;
+          word-wrap: break-word;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        
+        // Essayer d'ajouter au body
+        if(document.body) {
+          document.body.appendChild(toast);
+          console.log('✅ Toast ajouté au body');
+        } else if(document.documentElement) {
+          document.documentElement.appendChild(toast);
+          console.log('✅ Toast ajouté au documentElement');
+        } else {
+          // Body n'existe pas encore, retry dans 100ms
+          console.warn('showToast: body non prêt, retry...');
+          setTimeout(() => showToast(msg, type), 100);
+          return;
+        }
+      }
+      
+      // À ce point, toast DOIT exister
+      if(toast && toast.textContent !== undefined) {
+        toast.textContent = msg;
+        toast.className = 'show ' + type;
+        setTimeout(() => {
+          if(toast && toast.textContent !== undefined) {
+            toast.className = '';
+          }
+        }, 3000);
+      } else {
+        console.error('showToast: impossible d\'accéder à toast', {toast, msg});
+      }
+    } catch(e) {
+      console.error('showToast: erreur', e, msg);
     }
-    toast.textContent = msg;
-    toast.className = 'show ' + type;
-    setTimeout(() => {
-      toast.className = '';
-    }, 3000);
   }
 
   // Gestion des sessions avec paramètres URL (solution ultime pour environnements restrictifs)
@@ -1355,6 +1404,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    ensureToastExists(); // S'assurer que le toast existe
     cycleLoginPlaceholders();
     document.getElementById('login-username')?.focus();
     
