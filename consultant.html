@@ -602,22 +602,21 @@
   }
 
   function renderAvisTimeline(avisList) {
-    const services = ['urbanisme','cadastre','domaine','hygiene','mairie','dreec','sapeur','ageroute','snhlm','tourisme'];
     const timeline = document.getElementById('timeline_container');
     if (!avisList.length) {
       timeline.innerHTML = `<div class="empty-state">Aucun avis disponible pour ce dossier.</div>`;
       return;
     }
 
-    timeline.innerHTML = services.map(service => {
-      const avisItem = avisList.find(a => String(a.service_name || '').toLowerCase() === service.toLowerCase());
-      const avis = avisItem ? avisItem.avis : 'N/A';
+    timeline.innerHTML = avisList.map(avisItem => {
+      const serviceName = avisItem.service_name || 'Service inconnu';
+      const avis = avisItem.avis || 'N/A';
       const icon = avis === 'Favorable' ? '✓' : avis === 'Defavorable' ? '✗' : '—';
       const color = avis === 'Favorable' ? 'color: var(--success);' : avis === 'Defavorable' ? 'color: var(--danger);' : 'color: var(--text-muted);';
       return `<div class="timeline-item">
         <div class="timeline-marker" style="${color}">${icon}</div>
         <div class="timeline-content">
-          <h3>${service.toUpperCase()}</h3>
+          <h3>${serviceName.toUpperCase()}</h3>
           <p>${avis}</p>
         </div>
       </div>`;
